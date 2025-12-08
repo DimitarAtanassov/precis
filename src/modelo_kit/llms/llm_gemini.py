@@ -1,6 +1,6 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
-from modelo_kit.llm_base import BaseLLMService
+from modelo_kit.llms.llm_base import BaseLLMService
 
 class GeminiLLMService(BaseLLMService):
     def __init__(self, model_name="gemini-pro"):

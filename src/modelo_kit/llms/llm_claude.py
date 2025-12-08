@@ -1,6 +1,6 @@
 import os
-from langchain_anthropic import ChatAnthropic  # Hypothetical import
-from modelo_kit.llm_base import BaseLLMService
+from langchain_anthropic import ChatAnthropic
+from modelo_kit.llms.llm_base import BaseLLMService
 
 class ClaudeLLMService(BaseLLMService):
     def __init__(self, model_name="claude-3-opus-20240229"):
