@@ -1,8 +1,8 @@
 import os
 from langchain_openai import ChatOpenAI
-from modelo_kit.llms.llm_base import BaseLLMService
 
-class OpenAILLMService(BaseLLMService):
+
+class OpenAILLMService():
     def __init__(self, model_name="gpt-5"):
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:

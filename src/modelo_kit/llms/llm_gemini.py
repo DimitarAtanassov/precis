@@ -1,8 +1,7 @@
 import os
 from langchain_google_genai import ChatGoogleGenerativeAI
-from modelo_kit.llms.llm_base import BaseLLMService
 
-class GeminiLLMService(BaseLLMService):
+class GeminiLLMService():
     def __init__(self, model_name="gemini-pro"):
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key:

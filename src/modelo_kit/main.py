@@ -1,4 +1,5 @@
 from modelo_kit.llm_factory import get_llm_service
+from modelo_kit.services.prompt_service import PromptService
 
 def main():
     providers = {
@@ -7,7 +8,9 @@ def main():
         "claude": "claude-opus-4-5-20251101",
         "gemini": "gemini-3-pro-preview",
     }
-    prompt = "Hello, LLM!"
+    # Use PromptService to get the question prompt with dynamic variable
+    prompt_service = PromptService()
+    prompt = prompt_service.get("question", country="France")
 
     for provider, model_name in providers.items():
         print(f"\n--- {provider.upper()} ({model_name}) ---")

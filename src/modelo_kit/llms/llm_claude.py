@@ -1,8 +1,7 @@
 import os
 from langchain_anthropic import ChatAnthropic
-from modelo_kit.llms.llm_base import BaseLLMService
 
-class ClaudeLLMService(BaseLLMService):
+class ClaudeLLMService():
     def __init__(self, model_name="claude-3-opus-20240229"):
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:

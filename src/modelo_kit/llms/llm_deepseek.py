@@ -1,8 +1,7 @@
 import os
 import httpx
-from modelo_kit.llms.llm_base import BaseLLMService
 
-class DeepSeekLLMService(BaseLLMService):
+class DeepSeekLLMService():
     API_URL = "https://api.deepseek.com/v1/chat/completions"  # Update if DeepSeek docs specify otherwise
 
     def __init__(self, model_name="deepseek-chat"):

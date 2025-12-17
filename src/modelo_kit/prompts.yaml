@@ -1,0 +1,3 @@
+greeting: "Hello, LLM!"
+farewell: "Goodbye, {name}!"
+question: "What is the capital of {country}?"
