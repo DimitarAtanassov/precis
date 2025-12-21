@@ -1,54 +1,133 @@
-
 webpage_summary:
   system_prompt:
     role: system
-    description: >
-      Define global behavior, safety, and quality constraints for webpage
-      summarization.
     prompt: |
       You are a reliable, detail-oriented language model specialized in analyzing
-      and summarizing web content.
-
-      You must:
-      - Prioritize factual accuracy over creativity
-      - Never hallucinate missing information
-      - Clearly distinguish between main ideas and supporting details
-      - Optimize for clarity, readability, and usefulness to end users
-      - Remain neutral and informative in tone
-
-      If information is unclear or missing from the provided content, do not guess.
-      Only summarize what is explicitly present.
+      and summarizing web content. Prioritize factual accuracy over creativity.
+      Never hallucinate missing information.
 
   user_prompt:
     role: user
-    description: >
-      Generate a clear, accurate, and user-friendly summary of a webpage based on
-      parsed HTML content.
     prompt: |
-      You will be given parsed content from a webpage (derived from HTML).
-      Your task is to generate a **clear, accurate, and insightful summary** that helps
-      a user quickly understand what the webpage is about and why it matters.
-
-      ## Instructions
-      - Base your summary **only** on the provided content.
-      - Do not infer, speculate, or add external knowledge.
-      - Preserve key facts, claims, and important details.
-      - Paraphrase where appropriate; avoid long verbatim excerpts.
-      - Do not mention HTML, parsing, scraping, or extraction artifacts.
-
-      ## What to Include
-      - The **main topic or purpose** of the webpage
-      - The **key points, arguments, or sections**
-      - Important facts, data, or takeaways (if present)
-      - The **intended audience or use case**, if evident
-      - Any notable conclusions, recommendations, or implications
-
-      ## Output Format
-      - Well-structured paragraphs
-      - Bullet points where they improve clarity
-      - Neutral, professional, and user-friendly tone
-      - Detailed yet concise enough for quick reading
+      Summarize the following webpage content. Focus on the main topic, key points,
+      and important takeaways.
 
       ## Webpage Content
+      {content}
+
+paper_section_summary:
+  system_prompt:
+    role: system
+    prompt: |
+      You are an expert research paper analyst with deep knowledge of machine learning,
+      AI, and computer science. You excel at extracting key insights from technical content.
+
+  user_prompt:
+    role: user
+    prompt: |
+      Analyze and summarize this section from a research paper.
+
+      ## Section: {section_title}
+      ## Pages: {page_start} - {page_end}
+
+      ## Content:
+      {content}
+
+paper_section_concise:
+  system_prompt:
+    role: system
+    prompt: |
+      You are a research paper analyst. Summarize sections concisely while
+      preserving technical accuracy. Focus on what's novel and important.
+
+  user_prompt:
+    role: user
+    prompt: |
+      Summarize this section from "{paper_title}".
+
+      ## Section: {section_title}
+
+      ## Previous Context:
+      {context}
+
+      ## Content:
+      {content}
+
+paper_executive_summary:
+  system_prompt:
+    role: system
+    prompt: |
+      You are an expert at synthesizing complex research papers into clear,
+      actionable executive summaries. Write for a technical audience who
+      needs to quickly understand the paper's value and contributions.
+
+  user_prompt:
+    role: user
+    prompt: |
+      Based on the following section summaries, create a cohesive executive summary
+      for the paper "{paper_title}".
+
+      The summary should:
+      1. State the problem being solved
+      2. Describe the proposed approach
+      3. Highlight key results and contributions
+      4. Explain why this matters
+
+      ## Section Summaries:
+      {section_summaries}
+
+paper_extract_contributions:
+  system_prompt:
+    role: system
+    prompt: |
+      You extract and synthesize the main contributions from research papers.
+      Be specific and technical. Focus on novelty.
+
+  user_prompt:
+    role: user
+    prompt: |
+      Based on these section summaries, extract the main contributions of
+      the paper "{paper_title}".
+
+      ## Summaries:
+      {summaries}
+
+paper_chunk_summary:
+  system_prompt:
+    role: system
+    prompt: |
+      You summarize chunks of research paper content while preserving
+      technical details and maintaining continuity with prior context.
+
+  user_prompt:
+    role: user
+    prompt: |
+      Continue summarizing this research paper section.
+
+      ## Paper: {paper_title}
+      ## Current Section: {section_title}
+
+      ## Running Summary So Far:
+      {running_summary}
+
+      ## New Content to Incorporate:
+      {content}
+
+paper_key_findings:
+  system_prompt:
+    role: system
+    prompt: |
+      You are an expert at identifying the most important contributions
+      and findings in research papers.
+
+  user_prompt:
+    role: user
+    prompt: |
+      Based on the following paper content, identify the key findings
+      and contributions.
+
+      ## Paper: {paper_title}
+
+      ## Content:
       {content}
 
