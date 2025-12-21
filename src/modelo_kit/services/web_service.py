@@ -1,5 +1,6 @@
 from langchain_community.document_loaders import WebBaseLoader
 
+
 class WebService:
     """
     Facade for fetching web page content using LangChain's WebBaseLoader.
