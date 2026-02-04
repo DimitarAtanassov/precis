@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore  # mypy: disable-error-code=import-untyped
+import yaml  # type: ignore[import-untyped]
 
-from modelo_kit.models.prompt_model import Prompt
+from modelo_kit.models import Prompt
 
 
 class PromptService:
