@@ -9,14 +9,16 @@ from typing import Protocol, runtime_checkable
 import tiktoken
 
 from modelo_kit.llms.llm_base import BaseLLMService
-from modelo_kit.models.llm_output_models import (
+from modelo_kit.models import (
     ChunkSummaryOutput,
     ContributionsOutput,
     ExecutiveSummaryOutput,
+    PaperSummary,
+    ParsedPaper,
+    Section,
+    SectionSummary,
     SectionSummaryOutput,
 )
-from modelo_kit.models.paper_model import ParsedPaper, Section
-from modelo_kit.models.summary_model import PaperSummary, SectionSummary
 from modelo_kit.services.prompt_service import PromptService
 
 # --- Token Counting Strategy Pattern ---

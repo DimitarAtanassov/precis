@@ -91,9 +91,7 @@ class GeminiLLMService(BaseLLMService):
             if schema_name == "SectionSummaryOutput":
                 return output_schema(
                     summary=(
-                        content[:500]
-                        if content
-                        else "Unable to generate summary."
+                        content[:500] if content else "Unable to generate summary."
                     ),
                     key_points=[],
                 )

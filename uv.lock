@@ -843,6 +843,7 @@ dependencies = [
     { name = "pdfminer" },
     { name = "pymupdf" },
     { name = "python-dotenv" },
+    { name = "pyyaml" },
     { name = "tiktoken" },
     { name = "uvicorn" },
 ]
@@ -865,6 +866,7 @@ requires-dist = [
     { name = "pdfminer", specifier = ">=20191125" },
     { name = "pymupdf", specifier = ">=1.26.7" },
     { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "tiktoken", specifier = ">=0.12.0" },
     { name = "uvicorn", specifier = ">=0.38.0" },
 ]
