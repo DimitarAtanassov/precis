@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.scripts]
-modelo-kit = "modelo_kit:main"
+modelo-kit = "modelo_kit.cli.app:main"
 
 [build-system]
 requires = ["uv_build>=0.9.16,<0.10.0"]
