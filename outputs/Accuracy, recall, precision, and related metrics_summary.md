@@ -22,10 +22,3 @@
 *   **Precision-Recall Tradeoff:** Improving precision often worsens recall, and vice versa, due to the effect of the classification threshold on false positives and false negatives.
 *   **Choice of Metric:** The choice of metric to prioritize depends on the specific costs, benefits, and risks associated with the problem.
 
-**Images:**
-
-*   Pasted image 20251007070540.png (Accuracy Equation)
-*   Pasted image 20251007071427.png (Recall Equation)
-*   Pasted image 20251007072113.png (False Positive Rate Equation)
-*   Pasted image 20251007072526.png (Precision Equation)
-*   Pasted image 20251007080810.png (Tradeoffs)
