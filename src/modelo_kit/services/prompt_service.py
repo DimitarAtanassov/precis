@@ -1,81 +1,137 @@
-from pathlib import Path
-from typing import Any
+"""
+Prompt Service - unified interface for prompt management.
 
-import yaml  # type: ignore[import-untyped]
+Acts as a facade over different prompt providers (YAML, Database, etc.)
+following the Strategy Pattern.
+
+Design Patterns:
+    - Facade: Simple interface hiding provider complexity
+    - Strategy: Swappable providers at runtime
+    - Singleton: Single instance per provider type (optional)
+"""
+
+from pathlib import Path
 
 from modelo_kit.models import Prompt
+from modelo_kit.services.prompt_provider import (
+    DatabasePromptProvider,
+    PromptProvider,
+    YamlPromptProvider,
+)
 
 
 class PromptService:
-    _instance: "PromptService | None" = None
-    _prompts: dict[str, Any] = {}
-    _loaded: bool = False
+    """
+    Unified service for prompt management.
 
-    def __new__(cls) -> "PromptService":
+    Provides a simple interface to get prompts regardless of the
+    underlying storage mechanism (YAML file or database).
+
+    Default: Uses database provider (floating_prompts).
+
+    Usage:
+        # Default: Database provider
+        service = PromptService()
+
+        # Explicit database provider
+        service = PromptService.from_database()
+
+        # YAML fallback (for offline/testing)
+        service = PromptService.from_yaml()
+
+        # Get prompts
+        prompt = service.get("paper_summary", content="...")
+    """
+
+    _instance: "PromptService | None" = None
+
+    def __init__(self, provider: PromptProvider | None = None) -> None:
+        """
+        Initialize the service with a provider.
+
+        Args:
+            provider: The prompt provider to use. Defaults to DatabasePromptProvider.
+        """
+        self._provider = provider or DatabasePromptProvider()
+
+    def __new__(cls, provider: PromptProvider | None = None) -> "PromptService":
+        """
+        Singleton pattern - returns existing instance if no provider specified.
+
+        If a provider is explicitly passed, creates a new instance.
+        This allows both singleton behavior and custom instances.
+        """
+        if provider is not None:
+            # Custom provider = new instance
+            instance = super().__new__(cls)
+            return instance
+
+        # No provider = singleton with default database
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    def _load_prompts(self) -> None:
-        """Load prompts from YAML file."""
-        if self._loaded:
-            return
-        # Find the root of the modelo_kit package
-        package_root = Path(__file__).parent.parent
-        prompts_path = package_root / "prompts.yaml"
-        if not prompts_path.exists():
-            raise FileNotFoundError(f"Could not find prompts.yaml at {prompts_path}")
-        with open(prompts_path) as f:
-            self._prompts = yaml.safe_load(f)
-        self._loaded = True
+    @classmethod
+    def from_database(cls, version: int | None = None) -> "PromptService":
+        """
+        Create a service using the database provider.
+
+        Args:
+            version: Specific prompt version to use. None = latest.
+
+        Returns:
+            A new PromptService instance using DatabasePromptProvider.
+        """
+        return cls(provider=DatabasePromptProvider(version=version))
+
+    @classmethod
+    def from_yaml(cls, yaml_path: str | None = None) -> "PromptService":
+        """
+        Create a service using a YAML file.
+
+        Useful for offline development or testing without database.
+
+        Args:
+            yaml_path: Path to the YAML file. None = default prompts.yaml.
+
+        Returns:
+            A new PromptService instance using YamlPromptProvider.
+        """
+        path = Path(yaml_path) if yaml_path else None
+        return cls(provider=YamlPromptProvider(yaml_path=path))
 
     def get(self, key: str, **kwargs: object) -> Prompt:
         """
-        Returns a Prompt object with 'system_prompt' and 'user_prompt' attributes
-        depending on the structure in prompts.yaml.
+        Get a prompt by key with variable substitution.
 
-        If only a single prompt is present, returns Prompt(user_prompt=...).
-        If both system and user prompts are present, returns both in a Prompt object.
+        Args:
+            key: The prompt identifier.
+            **kwargs: Variables to substitute into the prompt template.
+
+        Returns:
+            A Prompt object with system_prompt and user_prompt.
+
+        Raises:
+            KeyError: If prompt not found.
+            ValueError: If required variables are missing.
+
+        Example:
+            prompt = service.get("paper_summary", title="AI Paper", content="...")
+            print(prompt.system_prompt)
+            print(prompt.user_prompt)
         """
-        # Ensure prompts are loaded
-        self._load_prompts()
+        return self._provider.get(key, **kwargs)
 
-        if key not in self._prompts:
-            raise KeyError(f"Prompt '{key}' not found.")
+    def exists(self, key: str) -> bool:
+        """Check if a prompt exists."""
+        return self._provider.exists(key)
 
-        prompt_entry = self._prompts[key]
+    def list_keys(self) -> list[str]:
+        """List all available prompt keys."""
+        return self._provider.list_keys()
 
-        # Case 1: Both system and user prompts exist
-        if (
-            isinstance(prompt_entry, dict)
-            and "system_prompt" in prompt_entry
-            and "user_prompt" in prompt_entry
-        ):
-            system_prompt = prompt_entry["system_prompt"].get("prompt", "")
-            user_prompt = prompt_entry["user_prompt"].get("prompt", "")
-            # Format with kwargs if needed
-            if kwargs:
-                try:
-                    user_prompt = user_prompt.format(**kwargs)
-                    system_prompt = system_prompt.format(**kwargs)
-                except KeyError as e:
-                    raise ValueError(
-                        f"Missing variable for prompt '{key}': {e}"
-                    ) from None
-            return Prompt(system_prompt=system_prompt, user_prompt=user_prompt)
+    @property
+    def provider(self) -> PromptProvider:
+        """Get the underlying provider (for advanced usage)."""
+        return self._provider
 
-        # Case 2: Only a single prompt
-        if isinstance(prompt_entry, str):
-            prompt = prompt_entry
-        elif isinstance(prompt_entry, dict) and "prompt" in prompt_entry:
-            prompt = prompt_entry["prompt"]
-        else:
-            raise ValueError(f"Prompt '{key}' has an unrecognized structure.")
-
-        if kwargs:
-            try:
-                prompt = prompt.format(**kwargs)
-            except KeyError as e:
-                raise ValueError(f"Missing variable for prompt '{key}': {e}") from None
-
-        return Prompt(user_prompt=prompt)
