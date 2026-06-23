@@ -940,57 +940,6 @@ wheels = [
 ]
 
 [[package]]
-name = "modelo-kit"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "beautifulsoup4" },
-    { name = "fastapi" },
-    { name = "floating-prompts" },
-    { name = "httpx" },
-    { name = "langchain-anthropic" },
-    { name = "langchain-community" },
-    { name = "langchain-google-genai" },
-    { name = "langchain-openai" },
-    { name = "pdfminer" },
-    { name = "pymupdf" },
-    { name = "python-dotenv" },
-    { name = "pyyaml" },
-    { name = "tiktoken" },
-    { name = "uvicorn" },
-]
-
-[package.dev-dependencies]
-lint = [
-    { name = "mypy" },
-    { name = "ruff" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beautifulsoup4", specifier = ">=4.14.3" },
-    { name = "fastapi", specifier = ">=0.124.0" },
-    { name = "floating-prompts", editable = "../floating_prompts" },
-    { name = "httpx", specifier = ">=0.28.1" },
-    { name = "langchain-anthropic", specifier = ">=1.2.0" },
-    { name = "langchain-community", specifier = ">=0.4.1" },
-    { name = "langchain-google-genai", specifier = ">=3.2.0" },
-    { name = "langchain-openai", specifier = ">=1.1.0" },
-    { name = "pdfminer", specifier = ">=20191125" },
-    { name = "pymupdf", specifier = ">=1.26.7" },
-    { name = "python-dotenv", specifier = ">=1.2.1" },
-    { name = "pyyaml", specifier = ">=6.0.2" },
-    { name = "tiktoken", specifier = ">=0.12.0" },
-    { name = "uvicorn", specifier = ">=0.38.0" },
-]
-
-[package.metadata.requires-dev]
-lint = [
-    { name = "mypy", specifier = ">=1.19.1" },
-    { name = "ruff", specifier = ">=0.14.10" },
-]
-
-[[package]]
 name = "multidict"
 version = "6.7.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1242,6 +1191,57 @@ dependencies = [
     { name = "pycryptodome" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/71/a3/155c5cde5f9c0b1069043b2946a93f54a41fd72cc19c6c100f6f2f5bdc15/pdfminer-20191125.tar.gz", hash = "sha256:9e700bc731300ed5c8936343c1dd4529638184198e54e91dd2b59b64a755dc01", size = 4173248, upload-time = "2019-11-25T12:02:21.1Z" }
+
+[[package]]
+name = "precis"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "beautifulsoup4" },
+    { name = "fastapi" },
+    { name = "floating-prompts" },
+    { name = "httpx" },
+    { name = "langchain-anthropic" },
+    { name = "langchain-community" },
+    { name = "langchain-google-genai" },
+    { name = "langchain-openai" },
+    { name = "pdfminer" },
+    { name = "pymupdf" },
+    { name = "python-dotenv" },
+    { name = "pyyaml" },
+    { name = "tiktoken" },
+    { name = "uvicorn" },
+]
+
+[package.dev-dependencies]
+lint = [
+    { name = "mypy" },
+    { name = "ruff" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "beautifulsoup4", specifier = ">=4.14.3" },
+    { name = "fastapi", specifier = ">=0.124.0" },
+    { name = "floating-prompts", editable = "../floating_prompts" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "langchain-anthropic", specifier = ">=1.2.0" },
+    { name = "langchain-community", specifier = ">=0.4.1" },
+    { name = "langchain-google-genai", specifier = ">=3.2.0" },
+    { name = "langchain-openai", specifier = ">=1.1.0" },
+    { name = "pdfminer", specifier = ">=20191125" },
+    { name = "pymupdf", specifier = ">=1.26.7" },
+    { name = "python-dotenv", specifier = ">=1.2.1" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
+    { name = "tiktoken", specifier = ">=0.12.0" },
+    { name = "uvicorn", specifier = ">=0.38.0" },
+]
+
+[package.metadata.requires-dev]
+lint = [
+    { name = "mypy", specifier = ">=1.19.1" },
+    { name = "ruff", specifier = ">=0.14.10" },
+]
 
 [[package]]
 name = "propcache"

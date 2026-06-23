@@ -1,7 +1,7 @@
 """
-Example: Using modelO_kit with floating_prompts database.
+Example: Using precis with floating_prompts database.
 
-This demonstrates how to configure modelO_kit to read prompts from
+This demonstrates how to configure precis to read prompts from
 the PostgreSQL database instead of the default YAML file.
 
 Setup:
@@ -11,7 +11,7 @@ Setup:
     4. Set environment variables (.env file)
 """
 
-from modelo_kit.services import (
+from precis.services import (
     LLMRequest,
     LLMService,
     PromptService,

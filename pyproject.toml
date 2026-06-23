@@ -1,7 +1,7 @@
 [project]
-name = "modelo-kit"
+name = "precis"
 version = "0.1.0"
-description = "Add your description here"
+description = "A multi-LLM toolkit for parsing and summarizing research papers, Obsidian vaults, and web pages."
 readme = "README.md"
 authors = [
     { name = "DimitarAtanassov", email = "dimitar789558@gmail.com" }
@@ -28,7 +28,7 @@ dependencies = [
 floating-prompts = { path = "../floating_prompts", editable = true }
 
 [project.scripts]
-modelo-kit = "modelo_kit.cli.app:main"
+precis = "precis.cli.app:main"
 
 [build-system]
 requires = ["uv_build>=0.9.16,<0.10.0"]

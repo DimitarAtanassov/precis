@@ -3,7 +3,7 @@
 Migrate prompts from prompts.yaml to floating_prompts database.
 
 Usage:
-    cd modelO_kit
+    cd precis
     uv run python scripts/migrate_prompts_to_db.py
 
 This will:
@@ -117,7 +117,7 @@ def main() -> None:
     parser.add_argument(
         "--yaml-path",
         type=Path,
-        default=Path(__file__).parent.parent / "src/modelo_kit/prompts.yaml",
+        default=Path(__file__).parent.parent / "src/precis/prompts.yaml",
         help="Path to prompts.yaml",
     )
     parser.add_argument(
