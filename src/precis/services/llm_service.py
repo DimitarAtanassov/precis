@@ -6,8 +6,9 @@ Centralizes LLM configuration and prompt handling to reduce code duplication.
 
 from dataclasses import dataclass
 
+from precis.config import Settings, get_settings
 from precis.llm_factory import get_llm_service
-from precis.llms.llm_base import BaseLLMService
+from precis.ports import LLMProvider
 from precis.services.prompt_service import PromptService
 
 
@@ -42,15 +43,21 @@ class LLMService:
         ))
     """
 
-    def __init__(self, prompts: PromptService | None = None) -> None:
+    def __init__(
+        self,
+        prompts: PromptService | None = None,
+        settings: Settings | None = None,
+    ) -> None:
         """
         Initialize the service.
 
         Args:
-            prompts: PromptService instance. Uses singleton if not provided.
+            prompts: PromptService instance. Defaults to a settings-driven one.
+            settings: Application settings used to resolve provider credentials.
         """
-        self._prompts = prompts or PromptService()
-        self._llm: BaseLLMService | None = None
+        self._settings = settings or get_settings()
+        self._prompts = prompts or PromptService.from_settings(self._settings)
+        self._llm: LLMProvider | None = None
         self._provider: str = ""
         self._model: str = ""
 
@@ -64,7 +71,7 @@ class LLMService:
         """
         self._provider = provider
         self._model = model
-        self._llm = get_llm_service(provider, model)
+        self._llm = get_llm_service(provider, model, self._settings)
 
     @property
     def model(self) -> str:
@@ -81,12 +88,12 @@ class LLMService:
         """Check if the service is configured."""
         return self._llm is not None
 
-    def get_llm(self) -> BaseLLMService:
+    def get_llm(self) -> LLMProvider:
         """
         Get the underlying LLM instance.
 
         Returns:
-            The configured BaseLLMService instance.
+            The configured LLMProvider instance.
 
         Raises:
             RuntimeError: If service not configured.
@@ -96,7 +103,7 @@ class LLMService:
             raise RuntimeError(msg)
         return self._llm
 
-    def generate(self, request: LLMRequest) -> str:
+    async def generate(self, request: LLMRequest) -> str:
         """
         Generate response using configured LLM.
 
@@ -118,10 +125,9 @@ class LLMService:
         if prompt.system_prompt:
             self._llm.set_system_prompt(prompt.system_prompt)
 
-        result: str = self._llm.ask(prompt.user_prompt)
-        return result
+        return await self._llm.ask(prompt.user_prompt)
 
-    def ask(self, user_prompt: str, system_prompt: str | None = None) -> str:
+    async def ask(self, user_prompt: str, system_prompt: str | None = None) -> str:
         """
         Direct ask without using prompt templates.
 
@@ -139,5 +145,4 @@ class LLMService:
         if system_prompt:
             self._llm.set_system_prompt(system_prompt)
 
-        result: str = self._llm.ask(user_prompt)
-        return result
+        return await self._llm.ask(user_prompt)

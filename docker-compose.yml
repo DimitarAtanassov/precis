@@ -1,0 +1,45 @@
+# Full local stack: the Précis API plus a Postgres instance for the optional
+# database-backed prompt store. The API defaults to bundled YAML prompts, so it
+# runs fine without Postgres; the database is provided for the complete stack.
+
+services:
+  api:
+    build: .
+    image: precis-api:latest
+    ports:
+      - "8000:8000"
+    environment:
+      PRECIS_LOG_JSON: "true"
+      PRECIS_PROMPT_SOURCE: "yaml"
+      # Pass provider keys through from the host environment (or a .env file).
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/healthz')"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: precis
+      POSTGRES_PASSWORD: precis
+      POSTGRES_DB: precis
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U precis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:

@@ -10,4 +10,3 @@ Supports:
 from precis.cli.app import main
 
 __all__ = ["main"]
-

@@ -9,8 +9,11 @@ from pathlib import Path
 import httpx
 
 from precis.models import ParsedPaper, Section
+from precis.observability import get_logger
 from precis.parsers.base import BaseParser
 from precis.parsers.pdf import PDFFontParser, PDFTocParser
+
+_logger = get_logger(__name__)
 
 
 class PaperParser:
@@ -97,7 +100,7 @@ class PaperParser:
 
     def _download_pdf(self, url: str) -> bytes:
         """Download PDF from URL."""
-        print(f"📥 Downloading: {url}")
+        _logger.info("downloading_pdf", url=url)
         response = httpx.get(url, follow_redirects=True, timeout=30.0)
         response.raise_for_status()
         self._pdf_bytes = response.content

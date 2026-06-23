@@ -1,45 +1,42 @@
-"""
-Models for precis.
+"""Backward-compatible facade over :mod:`precis.domain`.
+
+The canonical home for models is now ``precis.domain``. This module re-exports
+them so existing ``from precis.models import ...`` call sites keep working.
+Prefer importing from ``precis.domain`` in new code.
 """
 
-from precis.models.content import (
+from precis.domain import (
     ChunkSummaryOutput,
     ContributionsOutput,
     ExecutiveSummaryOutput,
+    LLMOutput,
     ObsidianLink,
     ObsidianNote,
     Paper,
     PaperSummary,
     ParsedPaper,
+    Prompt,
     Section,
     SectionSummary,
     SectionSummaryOutput,
-    VaultStats,
-)
-from precis.models.llm import (
-    LLMOutput,
-    Prompt,
     Summary,
+    VaultStats,
 )
 
 __all__ = [
-    # LLM models
-    "LLMOutput",
-    "Prompt",
-    "Summary",
-    # Paper models
-    "Paper",
-    "ParsedPaper",
-    "Section",
-    "PaperSummary",
-    "SectionSummary",
-    # Structured output models
-    "SectionSummaryOutput",
     "ChunkSummaryOutput",
-    "ExecutiveSummaryOutput",
     "ContributionsOutput",
-    # Obsidian models
-    "ObsidianNote",
+    "ExecutiveSummaryOutput",
+    "LLMOutput",
     "ObsidianLink",
+    "ObsidianNote",
+    "Paper",
+    "PaperSummary",
+    "ParsedPaper",
+    "Prompt",
+    "Section",
+    "SectionSummary",
+    "SectionSummaryOutput",
+    "Summary",
     "VaultStats",
 ]

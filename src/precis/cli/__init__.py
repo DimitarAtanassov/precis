@@ -1,16 +1,9 @@
+"""CLI adapter (Typer) over the shared application services.
+
+Note: the Typer instance lives in ``precis.cli.app`` and is intentionally not
+re-exported here, to avoid shadowing the ``app`` submodule name.
 """
-CLI module for user interaction.
 
-Separates presentation logic from business logic.
-"""
+from precis.cli.app import main
 
-from precis.cli.handlers import ObsidianHandler, PaperHandler, WebHandler
-from precis.cli.menu import Menu, MenuItem
-
-__all__ = [
-    "Menu",
-    "MenuItem",
-    "PaperHandler",
-    "ObsidianHandler",
-    "WebHandler",
-]
+__all__ = ["main"]
