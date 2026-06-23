@@ -1,4 +1,4 @@
-# modelO_kit Refactoring Guide
+# precis Refactoring Guide
 
 **Date:** Senior Code Review  
 **Reviewer:** Senior Engineer  
@@ -72,8 +72,8 @@ def _summarize(self, paper: Paper) -> PaperSummary:
 ```
 
 ### Files to Modify
-- `src/modelo_kit/services/llm_service.py` - Add `get_llm()` or `create_summarizer()` method
-- `src/modelo_kit/cli/handlers.py` - Use new methods instead of protected access
+- `src/precis/services/llm_service.py` - Add `get_llm()` or `create_summarizer()` method
+- `src/precis/cli/handlers.py` - Use new methods instead of protected access
 
 ---
 
@@ -137,9 +137,9 @@ class MarkdownFormatter:
 For now, **delete the unused code**. If future requirements need these abstractions, they can be re-added with proper usage. Dead code increases maintenance burden.
 
 ### Files to Modify
-- `src/modelo_kit/core/enums.py` - Remove `ContentMode` or integrate it
-- `src/modelo_kit/core/interfaces.py` - Remove unused protocols or use them
-- `src/modelo_kit/models/__init__.py` - Update exports if needed
+- `src/precis/core/enums.py` - Remove `ContentMode` or integrate it
+- `src/precis/core/interfaces.py` - Remove unused protocols or use them
+- `src/precis/models/__init__.py` - Update exports if needed
 
 ---
 
@@ -189,8 +189,8 @@ print_section(f"Folder Summary: {folder_path}")
 ```
 
 ### Files to Modify
-- `src/modelo_kit/cli/prompts.py` - Add `print_section()` function
-- `src/modelo_kit/cli/handlers.py` - Replace duplicate print statements
+- `src/precis/cli/prompts.py` - Add `print_section()` function
+- `src/precis/cli/handlers.py` - Replace duplicate print statements
 
 ---
 
@@ -230,7 +230,7 @@ def sanitize_filename(name: str) -> str: ...
 def get_name_from_source(source: str) -> str: ...
 
 # core/output.py
-from modelo_kit.core.filename_utils import sanitize_filename, get_model_suffix
+from precis.core.filename_utils import sanitize_filename, get_model_suffix
 
 class OutputWriter:
     def save_summary(self, name: str, title: str, content: str, provider: str, model: str) -> None:
@@ -254,9 +254,9 @@ class OutputWriter:
 **Option A** is cleaner - separate pure utility functions from the writer class.
 
 ### Files to Modify
-- Create `src/modelo_kit/core/filename_utils.py`
-- Update `src/modelo_kit/core/output.py` to import utilities
-- Update `src/modelo_kit/cli/handlers.py` to import from new location
+- Create `src/precis/core/filename_utils.py`
+- Update `src/precis/core/output.py` to import utilities
+- Update `src/precis/cli/handlers.py` to import from new location
 
 ---
 
@@ -314,8 +314,8 @@ def save_parsed_paper(self, paper: Paper, name: str) -> None:
 ```
 
 ### Files to Modify
-- `src/modelo_kit/core/output.py` - Refactor method signature
-- `src/modelo_kit/cli/handlers.py` - Update call sites
+- `src/precis/core/output.py` - Refactor method signature
+- `src/precis/cli/handlers.py` - Update call sites
 
 ---
 
@@ -375,7 +375,7 @@ class PaperSummarizer:
 For this codebase size, **Option A** (module-level caching with `@lru_cache`) is simpler and achieves the same result.
 
 ### Files to Modify
-- `src/modelo_kit/services/prompt_service.py` - Refactor singleton pattern
+- `src/precis/services/prompt_service.py` - Refactor singleton pattern
 
 ---
 
@@ -412,8 +412,8 @@ Use the `ContentMode` enum (if kept) with a registry:
 
 ```python
 # cli/handler_registry.py
-from modelo_kit.core.enums import ContentMode
-from modelo_kit.cli.handlers import BaseHandler, PaperHandler, ObsidianHandler, WebHandler
+from precis.core.enums import ContentMode
+from precis.cli.handlers import BaseHandler, PaperHandler, ObsidianHandler, WebHandler
 
 _HANDLERS: dict[ContentMode, type[BaseHandler]] = {
     ContentMode.PAPER: PaperHandler,
@@ -429,8 +429,8 @@ def get_handler(mode: ContentMode) -> BaseHandler:
 ```
 
 ### Files to Create/Modify
-- Create `src/modelo_kit/cli/handler_registry.py` (optional)
-- Update `src/modelo_kit/cli/app.py` to use registry
+- Create `src/precis/cli/handler_registry.py` (optional)
+- Update `src/precis/cli/app.py` to use registry
 
 ---
 
@@ -492,7 +492,7 @@ Use the existing `LLMProvider` enum more consistently:
 
 ```python
 # llm_service.py
-from modelo_kit.core.enums import LLMProvider
+from precis.core.enums import LLMProvider
 
 class LLMService:
     def configure(self, provider: LLMProvider | str, model: str) -> None:

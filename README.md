@@ -1,4 +1,4 @@
-# 🧠 Modelo Kit
+# 🧠 Précis
 
 A Python toolkit for parsing and summarizing content using LLMs. Works with research papers (PDFs), Obsidian vaults, and web pages.
 
@@ -20,8 +20,8 @@ Built with clean architecture principles—easy to understand, extend, and adapt
 
 ```bash
 # Clone and install
-git clone https://github.com/DimitarAtanassov/modelO_kit.git
-cd modelO_kit
+git clone https://github.com/DimitarAtanassov/precis.git
+cd precis
 uv sync  # or: pip install -e .
 
 # Set up API keys
@@ -29,7 +29,7 @@ echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env
 # Add others as needed: OPENAI_API_KEY, GOOGLE_API_KEY, DEEPSEEK_API_KEY
 
 # Run
-uv run modelo-kit
+uv run precis
 ```
 
 ---
@@ -37,7 +37,7 @@ uv run modelo-kit
 ## Architecture Overview
 
 ```
-src/modelo_kit/
+src/precis/
 ├── cli/                    # 🎯 Presentation Layer
 │   ├── app.py              #    Entry point & main menu
 │   ├── handlers.py         #    Mode handlers (Paper, Obsidian, Web)
@@ -89,7 +89,7 @@ src/modelo_kit/
 **Solution:** A simple factory function maps provider names to classes:
 
 ```python
-from modelo_kit.llm_factory import get_llm_service
+from precis.llm_factory import get_llm_service
 
 # Caller doesn't need to know about ClaudeLLMService, OpenAILLMService, etc.
 llm = get_llm_service("claude", "claude-sonnet-4-5-20250929")
@@ -176,7 +176,7 @@ class PaperHandler(BaseHandler):
 1. Create `llms/llm_newprovider.py`:
 
 ```python
-from modelo_kit.llms.llm_base import BaseLLMService
+from precis.llms.llm_base import BaseLLMService
 
 class NewProviderLLMService(BaseLLMService):
     def __init__(self, model_name: str = "default-model") -> None:
@@ -228,7 +228,7 @@ my_new_prompt:
 Use it:
 
 ```python
-from modelo_kit.services.prompt_service import PromptService
+from precis.services.prompt_service import PromptService
 
 prompts = PromptService()
 prompt = prompts.get("my_new_prompt", content="Hello world")
@@ -241,11 +241,11 @@ prompt = prompts.get("my_new_prompt", content="Hello world")
 ### CLI Mode
 
 ```bash
-uv run modelo-kit
+uv run precis
 ```
 
 ```
-🧠 Modelo Kit - Content Parser & Summarizer
+🧠 Précis - Content Parser & Summarizer
 ==================================================
 
 Select content source:
@@ -259,7 +259,7 @@ Select content source:
 
 ```python
 # Parse a paper
-from modelo_kit.parsers import PaperParser
+from precis.parsers import PaperParser
 
 parser = PaperParser()
 paper = parser.parse("paper.pdf", load_content=True)
@@ -267,14 +267,14 @@ print(f"Title: {paper.title}")
 print(f"Sections: {len(paper.sections)}")
 
 # Browse Obsidian vault
-from modelo_kit.services.obsidian_vault import ObsidianVault
+from precis.services.obsidian_vault import ObsidianVault
 
 vault = ObsidianVault("~/Documents/MyVault")
 for note in vault.notes_with_tag("project"):
     print(f"- {note.title} ({note.word_count} words)")
 
 # Use LLM directly
-from modelo_kit.llm_factory import get_llm_service
+from precis.llm_factory import get_llm_service
 
 llm = get_llm_service("claude", "claude-sonnet-4-5-20250929")
 response = llm.ask("Summarize quantum computing in 3 sentences.")
