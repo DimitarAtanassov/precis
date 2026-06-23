@@ -12,6 +12,7 @@ Design Patterns:
 
 from pathlib import Path
 
+from precis.config import Settings, get_settings
 from precis.models import Prompt
 from precis.services.prompt_provider import (
     DatabasePromptProvider,
@@ -27,49 +28,46 @@ class PromptService:
     Provides a simple interface to get prompts regardless of the
     underlying storage mechanism (YAML file or database).
 
-    Default: Uses database provider (floating_prompts).
+    Default: Uses the bundled YAML provider (offline-capable). The
+    floating_prompts database provider is opt-in via ``from_database()``.
 
     Usage:
-        # Default: Database provider
+        # Default: YAML provider (bundled prompts.yaml)
         service = PromptService()
 
-        # Explicit database provider
+        # Opt into the database provider
         service = PromptService.from_database()
 
-        # YAML fallback (for offline/testing)
+        # Explicit YAML file
         service = PromptService.from_yaml()
 
         # Get prompts
         prompt = service.get("paper_summary", content="...")
     """
 
-    _instance: "PromptService | None" = None
-
     def __init__(self, provider: PromptProvider | None = None) -> None:
         """
         Initialize the service with a provider.
 
         Args:
-            provider: The prompt provider to use. Defaults to DatabasePromptProvider.
+            provider: The prompt provider to use. Defaults to YamlPromptProvider,
+                the bundled offline-capable source. Use ``from_database()`` or
+                ``from_settings()`` to opt into the floating_prompts database
+                provider.
         """
-        self._provider = provider or DatabasePromptProvider()
+        self._provider = provider or YamlPromptProvider()
 
-    def __new__(cls, provider: PromptProvider | None = None) -> "PromptService":
+    @classmethod
+    def from_settings(cls, settings: "Settings | None" = None) -> "PromptService":
+        """Build a service whose provider is chosen by application settings.
+
+        ``prompt_source = "database"`` selects the floating_prompts provider;
+        anything else uses the bundled YAML provider.
         """
-        Singleton pattern - returns existing instance if no provider specified.
-
-        If a provider is explicitly passed, creates a new instance.
-        This allows both singleton behavior and custom instances.
-        """
-        if provider is not None:
-            # Custom provider = new instance
-            instance = super().__new__(cls)
-            return instance
-
-        # No provider = singleton with default database
-        if cls._instance is None:
-            cls._instance = super().__new__(cls)
-        return cls._instance
+        settings = settings or get_settings()
+        if settings.prompt_source == "database":
+            return cls.from_database(version=settings.prompt_version)
+        return cls.from_yaml()
 
     @classmethod
     def from_database(cls, version: int | None = None) -> "PromptService":
@@ -134,4 +132,3 @@ class PromptService:
     def provider(self) -> PromptProvider:
         """Get the underlying provider (for advanced usage)."""
         return self._provider
-

@@ -17,7 +17,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml  # type: ignore[import-untyped]
-from floating_prompts import PromptRepository, get_session
 
 from precis.models import Prompt
 
@@ -197,6 +196,24 @@ class DatabasePromptProvider(PromptProvider):
         """
         self._version = version
 
+    @staticmethod
+    def _load_backend() -> tuple[Any, Any]:
+        """Lazily import floating_prompts.
+
+        The database prompt store is an optional, externally-evolving
+        dependency. Importing it eagerly couples the whole ``precis`` package
+        to its public API, so a drift in that library would break even the
+        YAML-only and CLI code paths at import time. Deferring the import here
+        keeps ``import precis`` working and surfaces any incompatibility only
+        when the database provider is actually used.
+        """
+        from floating_prompts import (  # noqa: PLC0415
+            PromptRepository,
+            get_session,
+        )
+
+        return PromptRepository, get_session
+
     def get(self, key: str, **kwargs: object) -> Prompt:
         """
         Get a prompt from the database.
@@ -212,8 +229,9 @@ class DatabasePromptProvider(PromptProvider):
             KeyError: If prompt not found in database.
             ValueError: If required variables are missing.
         """
+        prompt_repository, get_session = self._load_backend()
         with get_session() as session:
-            repo = PromptRepository(session)
+            repo = prompt_repository(session)
             db_prompt = repo.get_by_name(key, version=self._version)
 
             if db_prompt is None:
@@ -233,15 +251,17 @@ class DatabasePromptProvider(PromptProvider):
 
     def exists(self, key: str) -> bool:
         """Check if a prompt exists in the database."""
+        prompt_repository, get_session = self._load_backend()
         with get_session() as session:
-            repo = PromptRepository(session)
+            repo = prompt_repository(session)
             result: bool = repo.exists(key, version=self._version)
             return result
 
     def list_keys(self) -> list[str]:
         """List all prompt names in the database."""
+        prompt_repository, get_session = self._load_backend()
         with get_session() as session:
-            repo = PromptRepository(session)
+            repo = prompt_repository(session)
             result: list[str] = repo.list_names()
             return result
 

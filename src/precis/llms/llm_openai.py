@@ -2,8 +2,6 @@
 OpenAI LLM service.
 """
 
-import os
-
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_openai import ChatOpenAI
 from pydantic import SecretStr
@@ -12,14 +10,16 @@ from precis.llms.llm_base import BaseLLMService
 
 
 class OpenAILLMService(BaseLLMService):
-    """
-    OpenAI LLM service (GPT-4, etc.).
+    """OpenAI LLM service (GPT-4o, etc.). API key is injected via settings."""
 
-    Requires OPENAI_API_KEY environment variable.
-    """
-
-    def __init__(self, model_name: str = "gpt-4o") -> None:
-        super().__init__(model_name)
+    def __init__(
+        self,
+        model_name: str = "gpt-4o",
+        *,
+        api_key: SecretStr | None = None,
+        timeout: int = 60,
+    ) -> None:
+        super().__init__(model_name, api_key=api_key, timeout=timeout)
         self.chat = self._init_chat()
 
     @property
@@ -27,8 +27,8 @@ class OpenAILLMService(BaseLLMService):
         return "OpenAI"
 
     def _init_chat(self) -> BaseChatModel:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            raise ValueError("OPENAI_API_KEY not found in environment.")
-
-        return ChatOpenAI(api_key=SecretStr(api_key), model=self.model_name)
+        return ChatOpenAI(
+            api_key=self._require_api_key(),
+            model=self.model_name,
+            timeout=self._timeout,
+        )

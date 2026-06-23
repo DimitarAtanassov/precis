@@ -1,0 +1,35 @@
+# Version control / CI
+.git
+.github
+.gitignore
+
+# Python caches & build artifacts
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+
+# Local env & secrets (never bake into the image)
+.env
+*.env
+
+# Tests, docs, and scratch
+tests/
+docs/
+outputs/
+*.md
+!README.md
+
+# Editor / OS noise
+.DS_Store
+.vscode/
+.idea/
+.claude/

@@ -28,55 +28,45 @@ uv sync  # or: pip install -e .
 echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env
 # Add others as needed: OPENAI_API_KEY, GOOGLE_API_KEY, DEEPSEEK_API_KEY
 
-# Run
-uv run precis
+# CLI (thin client over the services)
+uv run precis prompts
+uv run precis summarize text "some text to summarize"
+uv run precis summarize paper https://arxiv.org/pdf/1706.03762
+
+# API service
+uv run precis serve                 # or: uv run uvicorn precis.api.main:app --reload
+curl localhost:8000/healthz         # OpenAPI docs at /docs
+
+# Container (API + Postgres)
+docker compose up --build
 ```
 
 ---
 
 ## Architecture Overview
 
+Précis is an **API-first**, **hexagonal (ports & adapters)** service with an
+**async core** and an **in-house orchestration/agent layer**. Full details in
+[docs/architecture.md](docs/architecture.md).
+
 ```
 src/precis/
-├── cli/                    # 🎯 Presentation Layer
-│   ├── app.py              #    Entry point & main menu
-│   ├── handlers.py         #    Mode handlers (Paper, Obsidian, Web)
-│   ├── menu.py             #    Menu display utilities
-│   └── prompts.py          #    User input helpers
-│
-├── core/                   # 🔧 Foundation Layer
-│   ├── enums.py            #    LLMProvider enum
-│   ├── filename_utils.py   #    Filename sanitization
-│   ├── interfaces.py       #    Protocols (contracts)
-│   └── output.py           #    File writing
-│
-├── llms/                   # 🤖 LLM Abstraction Layer
-│   ├── llm_base.py         #    Base class (all shared logic)
-│   ├── llm_claude.py       #    Claude provider (~35 lines)
-│   ├── llm_openai.py       #    OpenAI provider (~35 lines)
-│   ├── llm_gemini.py       #    Gemini provider (~35 lines)
-│   └── llm_deepseek.py     #    DeepSeek provider (~40 lines)
-│
-├── models/                 # 📦 Data Models
-│   ├── content.py          #    Paper, Section, ObsidianNote
-│   └── llm.py              #    Prompt, LLMOutput, Summary
-│
-├── parsers/                # 📄 Content Extraction
-│   ├── base.py             #    BaseParser ABC
-│   ├── pdf.py              #    PDF parsing strategies
-│   ├── markdown.py         #    Obsidian markdown parser
-│   └── paper.py            #    PaperParser facade
-│
-├── services/               # ⚙️ Business Logic
-│   ├── llm_service.py      #    High-level LLM orchestration
-│   ├── obsidian_vault.py   #    Vault discovery & filtering
-│   ├── prompt_service.py   #    YAML prompt loading
-│   ├── summarizer_service.py  # Paper summarization pipeline
-│   └── web_service.py      #    Web content fetching
-│
-├── llm_factory.py          # 🏭 Factory function
-└── prompts.yaml            # 📝 All prompt templates
+├── domain/         # 📦 Pure models + PrecisError hierarchy (no I/O)
+├── ports/          # 🔌 Protocols: LLMProvider, PromptRepository, TokenCounter
+├── config/         # ⚙️  Settings (pydantic-settings) — one source of truth
+├── container.py    # 🏗️  Composition root (build_container)
+├── orchestration/  # 🤖 In-house agent layer: Step / Pipeline / ToolRegistry
+├── services/       # 🧠 Use-cases (PaperSummarizer = a pipeline of steps)
+├── llms/           # 🛰️  Async LLM adapters (LangChain + tenacity + metrics)
+├── parsers/        # 📄 PDF / markdown / paper parsing
+├── observability/  # 📊 structlog logging, token/cost metrics, optional OTel
+├── api/            # 🌐 FastAPI adapter (routes, DTOs, RFC7807, request-id)
+├── cli/            # 💻 Typer adapter over the same services
+└── prompts.yaml    # 📝 Bundled prompt templates
 ```
+
+**Quality gate:** `ruff` + `ruff format` + strict `mypy` + `pytest` (with a
+coverage ratchet) run in CI and via pre-commit.
 
 ---
 

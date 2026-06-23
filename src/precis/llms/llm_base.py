@@ -5,27 +5,27 @@ All provider-specific services inherit from this base class,
 which handles retry logic, structured output, and fallback parsing.
 """
 
-import time
 from abc import ABC, abstractmethod
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
-from pydantic import BaseModel
+from pydantic import BaseModel, SecretStr
+from tenacity import (
+    AsyncRetrying,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_exponential,
+)
+
+# Re-exported for backward compatibility; the canonical definitions now live in
+# precis.domain.errors so every layer shares one error hierarchy.
+from precis.domain.errors import ConfigError, LLMError, StructuredOutputError
+from precis.observability.metrics import record_llm_usage
 
 T = TypeVar("T", bound=BaseModel)
 
-
-class LLMError(Exception):
-    """Base exception for LLM errors."""
-
-    pass
-
-
-class StructuredOutputError(LLMError):
-    """Raised when structured output parsing fails."""
-
-    pass
+__all__ = ["BaseLLMService", "LLMError", "StructuredOutputError"]
 
 
 class BaseLLMService(ABC):
@@ -38,23 +38,46 @@ class BaseLLMService(ABC):
     - Structured output with fallback parsing
 
     Subclasses only need to:
-    1. Initialize `self.chat` with the appropriate LangChain chat model
-    2. Set `self.model_name`
+    1. Accept injected credentials via ``super().__init__`` and assign
+       ``self.chat`` from ``self._init_chat()``.
+    2. Implement ``provider_name`` and ``_init_chat``.
+
+    Credentials are injected (never read from the environment here) so the
+    composition root owns configuration and providers stay unit-testable.
     """
 
     MAX_RETRIES = 3
     RETRY_DELAY = 1.0  # seconds
 
-    def __init__(self, model_name: str) -> None:
+    def __init__(
+        self,
+        model_name: str,
+        *,
+        api_key: SecretStr | None = None,
+        timeout: int = 60,
+    ) -> None:
         """
         Initialize the LLM service.
 
         Args:
             model_name: The name of the model to use.
+            api_key: Provider API key, injected from settings.
+            timeout: Per-request timeout in seconds.
         """
         self.model_name = model_name
+        self._api_key = api_key
+        self._timeout = timeout
         self.system_prompt: str | None = None
-        self.chat: BaseChatModel  # Must be set by subclass
+        self.chat: BaseChatModel  # Must be set by subclass from _init_chat()
+
+    def _require_api_key(self) -> SecretStr:
+        """Return the injected API key or raise a clear configuration error."""
+        if self._api_key is None:
+            raise ConfigError(
+                f"{self.provider_name} API key is not configured. "
+                "Set the appropriate *_API_KEY environment variable."
+            )
+        return self._api_key
 
     @property
     @abstractmethod
@@ -75,7 +98,7 @@ class BaseLLMService(ABC):
         """Set the system prompt for subsequent calls."""
         self.system_prompt = system_prompt
 
-    def ask(self, prompt: str) -> str:
+    async def ask(self, prompt: str) -> str:
         """
         Send a prompt and get a string response.
 
@@ -86,18 +109,31 @@ class BaseLLMService(ABC):
             The model's response as a string.
         """
         messages = self._build_messages(prompt)
-        response = self.chat.invoke(messages)
+        response = await self.chat.ainvoke(messages)
+        self._record_usage(response)
         content = response.content
-        return str(content) if not isinstance(content, str) else content
+        return content if isinstance(content, str) else str(content)
 
-    def ask_structured(
+    def _record_usage(self, response: BaseMessage) -> None:
+        """Emit token/cost metrics from a chat response when available."""
+        usage = getattr(response, "usage_metadata", None)
+        if not usage:
+            return
+        record_llm_usage(
+            self.provider_name,
+            self.model_name,
+            int(usage.get("input_tokens", 0) or 0),
+            int(usage.get("output_tokens", 0) or 0),
+        )
+
+    async def ask_structured(
         self, prompt: str, output_schema: type[T], system_prompt: str | None = None
     ) -> T:
         """
         Send a prompt and get a structured response.
 
-        Uses retry logic with exponential backoff. Falls back to
-        raw text parsing if structured output fails.
+        Retries with exponential backoff (via tenacity), then falls back to raw
+        text parsing if structured output keeps failing.
 
         Args:
             prompt: The user prompt.
@@ -111,26 +147,30 @@ class BaseLLMService(ABC):
             StructuredOutputError: If parsing fails after all retries.
         """
         messages = self._build_messages(prompt, system_prompt)
-        last_error: Exception | None = None
+        last_error: Exception = StructuredOutputError(
+            f"{self.provider_name} produced no output for {output_schema.__name__}"
+        )
 
-        for attempt in range(self.MAX_RETRIES):
-            try:
-                structured_llm = self.chat.with_structured_output(output_schema)
-                result = structured_llm.invoke(messages)
+        try:
+            async for attempt in AsyncRetrying(
+                stop=stop_after_attempt(self.MAX_RETRIES),
+                wait=wait_exponential(multiplier=self.RETRY_DELAY),
+                retry=retry_if_exception_type(Exception),
+                reraise=True,
+            ):
+                with attempt:
+                    structured_llm = self.chat.with_structured_output(output_schema)
+                    result = await structured_llm.ainvoke(messages)
+                    if result is None:
+                        raise StructuredOutputError(
+                            f"{self.provider_name} returned None for "
+                            f"{output_schema.__name__}"
+                        )
+                    return cast(T, result)
+        except Exception as exc:
+            last_error = exc
 
-                if result is None:
-                    schema_name = output_schema.__name__
-                    raise StructuredOutputError(
-                        f"{self.provider_name} returned None for {schema_name}"
-                    )
-                return result  # type: ignore[return-value]
-
-            except Exception as e:
-                last_error = e
-                if attempt < self.MAX_RETRIES - 1:
-                    time.sleep(self.RETRY_DELAY * (attempt + 1))
-
-        return self._fallback_parse(messages, output_schema, last_error or Exception())
+        return await self._fallback_parse(messages, output_schema, last_error)
 
     def _build_messages(
         self, prompt: str, system_prompt: str | None = None
@@ -143,7 +183,7 @@ class BaseLLMService(ABC):
         messages.append(HumanMessage(content=prompt))
         return messages
 
-    def _fallback_parse(
+    async def _fallback_parse(
         self,
         messages: list[Any],
         output_schema: type[T],
@@ -155,7 +195,7 @@ class BaseLLMService(ABC):
         Gets raw text response and constructs a minimal valid schema instance.
         """
         try:
-            response = self.chat.invoke(messages)
+            response = await self.chat.ainvoke(messages)
             content = response.content
             text = str(content) if content else ""
 
